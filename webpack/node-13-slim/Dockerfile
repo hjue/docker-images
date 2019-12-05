@@ -5,7 +5,7 @@ RUN \
     npm install yarn -g \
     yarn global add nrm && \
     nrm use taobao &&\
-    yarn global add webpack webpack-dev-server &&\
+    yarn global add webpack-cli webpack webpack-dev-server &&\
     yarn global add cross-env
 
 VOLUME /app
