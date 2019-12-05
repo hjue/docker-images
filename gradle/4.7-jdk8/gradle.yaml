@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: gradle
+spec:
+  containers:
+  - name: gradle
+    image: registry-internal.cn-hangzhou.aliyuncs.com/gionee-library/gradle:4.7-jdk8
+    command:
+      - top 
+      - -b
