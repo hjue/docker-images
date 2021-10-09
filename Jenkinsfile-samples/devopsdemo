@@ -1,0 +1,88 @@
+pipeline {
+    agent {
+        label 'slave-pipeline'
+    }
+    options {
+        gitLabConnection('gitlab')
+    }
+    stages {
+        stage('Prepare') {
+      steps {
+        script {
+          git branch: '${gitlabSourceBranch}',
+                        changelog: false,
+                        credentialsId: 'gitlab',
+                        poll: false,
+                        url: 'https://gitlab.com/lizongshenblogs/applications/devopsdemo.git'
+
+          script {
+            GIT_COMMIT_ID = sh(returnStdout: true, script: 'git rev-parse --short HEAD').trim()
+            IMAGE_TAG = "${GIT_COMMIT_ID}-snapshot"
+            INGRESS_HOST = "preview-${gitlabSourceRepoName}-${gitlabMergeRequestIid}"
+            MR_URL = "${gitlabSourceRepoHomepage}/merge_requests/${gitlabMergeRequestIid}"
+
+            build_tag = "feature-${gitlabSourceRepoName}-${gitlabSourceBranch}-${GIT_COMMIT_ID}"
+            currentBuild.displayName = '#' + BUILD_NUMBER + '_' + gitlabMergeRequestIid + '_' + build_tag
+          }
+        }
+      }
+        }
+    }
+  stage('Build') {
+    when {
+      expression {
+        "${gitlabTargetBranch}" == 'dev'
+      }
+    }
+
+    steps {
+      script {
+        updateGitlabCommitStatus name: 'Build', state: 'running'
+
+        try {
+          echo '开始编译...'
+                    } catch (Exception ex) {
+          updateGitlabCommitStatus name: 'Build', state: 'failed'
+          throw ex
+                    } finally {
+        }
+
+        updateGitlabCommitStatus name: 'Build', state: 'success'
+      }
+    }
+  }
+  stage('Test') {
+    steps {
+      script {
+        updateGitlabCommitStatus name: 'Test', state: 'running'
+
+        try {
+          echo '开始进行单元测试...'
+                    } catch (Exception ex) {
+          updateGitlabCommitStatus name: 'Test', state: 'failed'
+          throw ex
+                    } finally {
+        }
+
+        updateGitlabCommitStatus name: 'Test', state: 'success'
+      }
+    }
+  }
+  stage('Deploy') {
+    steps {
+      script {
+        updateGitlabCommitStatus name: 'Deploy', state: 'running'
+
+        try {
+          echo '开始进行发布...'
+                    } catch (Exception ex) {
+          updateGitlabCommitStatus name: 'Deploy', state: 'failed'
+          throw ex
+                    } finally {
+        }
+
+        updateGitlabCommitStatus name: 'Deploy', state: 'success'
+      }
+    }
+  }
+}
