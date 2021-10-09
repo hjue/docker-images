@@ -85,4 +85,12 @@ pipeline {
       }
     }
   }
+  post {
+        failure {
+      updateGitlabCommitStatus name: 'Complete', state: 'failed'
+        }
+        success {
+      updateGitlabCommitStatus name: 'Complete', state: 'success'
+        }
+  }
 }
